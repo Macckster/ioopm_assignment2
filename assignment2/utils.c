@@ -100,15 +100,22 @@ answer_t ask_question(char* question, check_func check, convert_func convert)
 {
     char buf[255];
 
-    memset(buf, 0, 255);
-
     do
     {
+        memset(buf, 0, 255);
         //print(question);
         read_string(buf, 255);
     } while (!check(buf));
 
     return convert(buf);
+}
+
+bool valid_shelf(char* string)
+{
+    if(strlen(string) != 3)
+        return false;
+        
+    return isalpha(string[0]) && isdigit(string[1]) && isdigit(string[2]);
 }
 
 double ask_question_float(char* question)
@@ -124,4 +131,9 @@ int ask_question_int(char* question)
 char* ask_question_string(char* question)
 {
     return ask_question(question, not_empty, (convert_func)strdup).string_value; // Remember to free that shit
+}
+
+char* ask_question_shelf(char* question)
+{
+    return ask_question(question, valid_shelf, (convert_func)strdup).string_value; // Remember to also free that shit
 }

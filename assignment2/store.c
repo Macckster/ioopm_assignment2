@@ -1,4 +1,3 @@
-#include "common.h"
 #include "backend.h"
 
 void PrintLine(char* msg)
@@ -36,28 +35,62 @@ IOOPM_CHOICE MainMenu()
 
 IOOPM_CHOICE CartMenu()
 {
+    PrintLine("-------------------------");
     PrintLine("(1) Add To Cart");
     PrintLine("(2) Remove From Cart");
     PrintLine("(3) Calculate Cost");
     PrintLine("(4) Checkout");
     PrintLine("(5) Return To Main Menu");
+    PrintLine("-------------------------");
     
     return IOOPM_ADD;
 }
 
-merch_t* MakeMerch()
-{
-    return NULL;
-}
 
 void AddMerchandise(warehouse_t* wh)
 {
+    merch_t m;
     
+    PrintLine("-------------------------");
+    PrintLine("Enter the merchs name");
+    char* name = ReadString();
+    
+    PrintLine("Enter the merchs description");
+    char* description = ReadString();
+    
+    PrintLine("Enter the merchs price");
+    int price = ReadInt();
+    
+    PrintLine("Enter location");
+    char* location = ReadShelf();
+    PrintLine("-------------------------");
+    
+    m.name = name;
+    m.desc = description;
+    m.price = price;
+    m.location = location;
+    m.amount = 0;
+    
+    ioopm_hash_table_insert(wh->items, StringValue(name), MerchValue(m));
 }
 
 void ListMerchadise(warehouse_t* wh)
 {
+    ioopm_list_t items = ioopm_hash_table_values(wh->items);
     
+    size_t size = ioopm_hash_table_size(wh->items);
+    
+    merch_t arritems[size];
+    
+    for (size_t i = 0; i < size; i++)
+    {
+        elem_t tmp;
+        ioopm_linked_list_get(items, i, &tmp);
+        
+        arritems[i] = tmp.merch;
+    }
+    
+    Sort(arritems, size);
 }
 
 void EditMerchandise(warehouse_t* wh)
@@ -137,4 +170,6 @@ int main()
             
         }
     }
+    
+    DestroyWarehouse(wh);
 }

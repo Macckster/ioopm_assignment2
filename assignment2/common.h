@@ -1,5 +1,8 @@
 #pragma once
 
+#define StringValue(x) (elem_t) { .str = x}
+#define MerchValue(x) (elem_t) { .merch = x}
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -32,19 +35,12 @@ typedef enum
     IOOPM_QUIT = 14
 } IOOPM_CHOICE;
 
-typedef struct shelf_name
-{
-   char k;
-   int i;
-} shelf_name_t;
-
-
 typedef struct merch
 {
     char* name;
     char* desc;
     int price;
-    shelf_name_t location;
+    char* location;
     size_t amount;
 } merch_t;
 
@@ -79,6 +75,6 @@ union element
 	float floating_point;
 	void* pointer;
 	char* str;
-	merch_t merhandise;
+	merch_t merch;
 	/// other choices certainly possible
 };
