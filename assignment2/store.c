@@ -1,69 +1,74 @@
 #include "backend.h"
 
-void PrintLine(char* msg)
+struct list_entry
 {
-    printf("%s\n", msg);
-}
+    elem_t val;
+    list_entry_t* next;
+    list_entry_t* prev;
+};
 
-IOOPM_CHOICE MainMenu()
+struct list
+{
+    size_t size;
+    list_entry_t* sentinel;
+    list_entry_t* last;
+
+    ioopm_eq_function eqfunc;
+};
+
+IOOPM_CHOICE main_menu()
 {
     IOOPM_CHOICE choices[10] = { IOOPM_QUIT, IOOPM_ADD, IOOPM_LIST, IOOPM_REMOVE, IOOPM_EDIT, IOOPM_STOCK, IOOPM_REPLENISH, IOOPM_CREATE_CART, IOOPM_REMOVE_CART, IOOPM_EDIT_CART};
     
-    PrintLine("-------------------------");
-    PrintLine("(1) Add Merchandise");
-    PrintLine("(2) List Merchandise");
-    PrintLine("(3) Remove Merchandise");
-    PrintLine("(4) Edit Merchandise");
-    PrintLine("(5) Show Stock");
-    PrintLine("(6) Replenish");
-    PrintLine("(7) Create A Cart");
-    PrintLine("(8) Remove A Cart");
-    PrintLine("(9) Edit Cart");
-    PrintLine("(0) Quit");
-    PrintLine("-------------------------");
+    print_line("-------------------------");
+    print_line("(1) Add Merchandise");
+    print_line("(2) List Merchandise");
+    print_line("(3) Remove Merchandise");
+    print_line("(4) Edit Merchandise");
+    print_line("(5) Show Stock");
+    print_line("(6) replenish");
+    print_line("(7) Create A Cart");
+    print_line("(8) Remove A Cart");
+    print_line("(9) Edit Cart");
+    print_line("(0) Quit");
+    print_line("-------------------------");
     
-    int choice = 0;
-    
-    do
-    {
-        choice = ReadInt();
-    } 
-    while(choice < 0 || choice > 9);
+    int choice = read_int_range(0, 9);
     
     return choices[choice];
 }
 
-IOOPM_CHOICE CartMenu()
+IOOPM_CHOICE cart_menu()
 {
-    PrintLine("-------------------------");
-    PrintLine("(1) Add To Cart");
-    PrintLine("(2) Remove From Cart");
-    PrintLine("(3) Calculate Cost");
-    PrintLine("(4) Checkout");
-    PrintLine("(5) Return To Main Menu");
-    PrintLine("-------------------------");
+    print_line("-------------------------");
+    print_line("(1) Add To Cart");
+    print_line("(2) Remove From Cart");
+    print_line("(3) Calculate Cost");
+    print_line("(4) Checkout");
+    print_line("(5) Return To Main Menu");
+    print_line("-------------------------");
     
     return IOOPM_ADD;
 }
 
 
-void AddMerchandise(warehouse_t* wh)
+void add_merchandise(warehouse_t* wh)
 {
     merch_t m;
     
-    PrintLine("-------------------------");
-    PrintLine("Enter the merchs name");
-    char* name = ReadString();
+    print_line("-------------------------");
+    print_line("Enter the merchs name");
+    char* name = read_string();
     
-    PrintLine("Enter the merchs description");
-    char* description = ReadString();
+    print_line("Enter the merchs description");
+    char* description = read_string();
     
-    PrintLine("Enter the merchs price");
-    int price = ReadInt();
+    print_line("Enter the merchs price");
+    int price = read_int();
     
-    PrintLine("Enter location");
-    char* location = ReadShelf();
-    PrintLine("-------------------------");
+    print_line("Enter location");
+    char* location = read_shelf();
+    print_line("-------------------------");
     
     m.name = name;
     m.desc = description;
@@ -71,14 +76,17 @@ void AddMerchandise(warehouse_t* wh)
     m.location = location;
     m.amount = 0;
     
-    ioopm_hash_table_insert(wh->items, StringValue(name), MerchValue(m));
+    ioopm_hash_table_insert(wh->items, string_value(location), merch_value(m));
 }
 
-void ListMerchadise(warehouse_t* wh)
+void list_merchandise(warehouse_t* wh)
 {
-    ioopm_list_t items = ioopm_hash_table_values(wh->items);
+    ioopm_list_t* items = ioopm_hash_table_values(wh->items);
     
     size_t size = ioopm_hash_table_size(wh->items);
+    
+    if(size == 0)
+        print_line("You have no merch");
     
     merch_t arritems[size];
     
@@ -90,55 +98,232 @@ void ListMerchadise(warehouse_t* wh)
         arritems[i] = tmp.merch;
     }
     
-    Sort(arritems, size);
+    sort(arritems, size);
+    
+    int counter = 0;
+    
+    for (int i = 0; i < size; i += 20) 
+    {
+        for (int j = 0; j < 20; j++) 
+        {
+            if(i + j < size)
+            {
+                print_merch(arritems[i + j]);
+                printf("\n");
+            }
+                
+            counter++;
+        }
+        
+        if(counter >= size)
+        {
+            break;
+        }
+        
+        print_line("Continue showing entries? (y/n)");
+        bool showmore = read_bool();
+        
+        if(!showmore)
+            break;    
+    }
+    
+    print_line("Press enter to continue");
+    getchar();
+    
+    ioopm_linked_list_destroy(items);
 }
 
-void EditMerchandise(warehouse_t* wh)
+void edit_merchandise(warehouse_t* wh)
 {
+    char* choice = ask_user_for_name(wh);
+    
+    elem_t old;
+    ioopm_hash_table_lookup(wh->items, string_value(choice), &old);
+    
+    print_line("-------------------------");
+    print_merch(old.merch);
+    print_line("-------------------------");
+    
+    merch_t m;
+    
+    print_line("-------------------------");
+    print_line("Enter the new name");
+    char* name = read_string();
+    
+    print_line("Enter the new description");
+    char* description = read_string();
+    
+    print_line("Enter the new price");
+    int price = read_int();
+    
+    print_line("Enter the new location");
+    char* location = read_shelf();
+    print_line("-------------------------");
+    
+    m.name = name;
+    m.desc = description;
+    m.price = price;
+    m.location = location;
+    m.amount = 0;
+    
+    ioopm_hash_table_remove(wh->items, string_value(choice), NULL);
+    ioopm_hash_table_insert(wh->items, string_value(name), merch_value(m));
+}
+
+void remove_merchandise(warehouse_t* wh)
+{
+    char* name = ask_user_for_name(wh);
+    
+    ioopm_hash_table_remove(wh->items, string_value(name), NULL);
+}
+
+void show_stock(warehouse_t* wh)
+{
+    print_line("Enter merch name");
+    char* name = read_string();
+    
+    merch_t m;
+    m.name = name;
+    m.location = "Kappa";
+    m.amount = 0;
+    m.price = 420;
+    m.desc = "fake item";
+    
+    ioopm_list_t* items = ioopm_hash_table_values(wh->items);
+    ioopm_list_t* correct_items = ioopm_linked_list_create(merch_compare);
+    
+    size_t size = ioopm_hash_table_size(wh->items);
+    
+    for (size_t i = 0; i < size; i++) 
+    {
+        elem_t tmp;
+        
+        ioopm_linked_list_get(items, i, &tmp);
+        
+        if(merch_compare(tmp, merch_value(m)))
+        {
+            ioopm_linked_list_append(correct_items, tmp);
+        }
+    }
+    
+    ioopm_linked_list_destroy(items);
+    
+    size_t sort_size = ioopm_linked_list_size(correct_items);
+    
+    if(sort_size == 0)
+    {
+        print_line("You have no merchandise of that name!");
+        print_line("Press enter to continue");
+        getchar();
+        
+        return;
+    }    
+    merch_t merches[size];
+    
+    for (size_t i = 0; i < sort_size; i++) 
+    {
+        elem_t val;
+        ioopm_linked_list_get(correct_items, i, &val);
+        
+        merches[i] = val.merch;
+    }
+    
+    sort(merches, sort_size);
+    
+    printf("Listing for %s\n", m.name);
+    
+    for (size_t i = 0; i < sort_size; i++) 
+    {
+        merch_t m = merches[i];
+        
+        printf("%s:%zu\n", m.location, m.amount);
+    }
+    
+    print_line("Press enter to continue");
+    getchar();
+}
+
+void replenish(warehouse_t* wh)
+{
+    print_line("Where do you want to replenish?");
+    char* location = read_shelf();
+    
+    bool exists = ioopm_hash_table_has_key(wh->items, string_value(location));
+    
+    if(exists)
+    {
+        print_line("What should the new amount be?");
+        int new_amount = read_int();
+        
+        elem_t val;
+        ioopm_hash_table_lookup(wh->items, string_value(location), &val);
+        
+        val.merch.amount = new_amount;
+        
+        ioopm_hash_table_insert(wh->items, string_value(location), val);
+    }
+    else
+    {
+        print_line("Merch not found. Do you want to add something there? (y/n)");
+        
+        if(read_bool())
+        {
+            merch_t m; 
+    
+            print_line("Enter the merchs name");
+            char* name = read_string();
+    
+            print_line("Enter the merchs description");
+            char* description = read_string();
+    
+            print_line("Enter the merchs price");
+            int price = read_int();
+            
+            print_line("What should the amount be?");
+            int amount = read_int();
+            
+            m.name = name;
+            m.desc = description;
+            m.price = price;
+            m.location = location;
+            m.amount = amount;
+    
+            ioopm_hash_table_insert(wh->items, string_value(location), merch_value(m));
+        }
+        else
+        {
+            return;
+        }
+    }
     
 }
 
-void RemoveMerchandise(warehouse_t* wh)
-{
-    
-}
-
-void ShowStock(warehouse_t* wh, merch_t* m)
-{
-    
-}
-
-void Replenish(warehouse_t* wh)
-{
-    
-}
-
-cart_t* CreateCart(warehouse_t* wh)
+cart_t* create_cart(warehouse_t* wh)
 {
     return NULL;
 }
 
-void RemoveCart(cart_t* cart)
+void remove_cart(cart_t* cart)
 {
     
 }
 
-void AddToCart(cart_t* c, merch_t m)
+void add_to_cart(cart_t* c, merch_t m)
 {
     
 }
 
-void RemoveFromCart(cart_t* c, merch_t m)
+void remove_from_cart(cart_t* c, merch_t m)
 {
     
 }
 
-int CalculateCost(cart_t* cart)
+int calulate_cost(cart_t* cart)
 {
     return 420;
 }
 
-void Checkout(warehouse_t* wh, cart_t* cart)
+void checkout(warehouse_t* wh, cart_t* cart)
 {
     
 }
@@ -147,11 +332,11 @@ int main()
 {
     bool running = true;
     
-    warehouse_t* wh = CreateWarehouse();
+    warehouse_t* wh = create_warehouse();
     
     while(running)
     {
-        IOOPM_CHOICE c = MainMenu();
+        IOOPM_CHOICE c = main_menu();
         
         switch(c)
         {
@@ -159,17 +344,30 @@ int main()
                 running = false;
                 break;
             case IOOPM_ADD:
-                AddMerchandise(wh);
+                add_merchandise(wh);
                 break;
             case IOOPM_REMOVE:
-                RemoveMerchandise(wh);
+                remove_merchandise(wh);
+                break;
+            case IOOPM_LIST:
+                list_merchandise(wh);
+                break;
+            case IOOPM_EDIT:
+                edit_merchandise(wh);
+                break;
+            case IOOPM_STOCK:
+                show_stock(wh);
+                break;
+            case IOOPM_REPLENISH:
+                replenish(wh);
                 break;
             
             default:
-                return 0;
+                running = false;
+                break;
             
         }
     }
     
-    DestroyWarehouse(wh);
+    destroy_warehouse(wh);
 }

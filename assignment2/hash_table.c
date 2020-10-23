@@ -111,7 +111,7 @@ size_t get_new_size(size_t old)
     return primes[10];
 }
 
-void insertAt(ioopm_hash_table_t* ht, size_t buck_idx, hash_table_entry_t* e)
+void insert_at(ioopm_hash_table_t* ht, size_t buck_idx, hash_table_entry_t* e)
 {
     hash_table_entry_t* start = ht->buckets[buck_idx];
 
@@ -134,7 +134,7 @@ void insertAt(ioopm_hash_table_t* ht, size_t buck_idx, hash_table_entry_t* e)
     }
 }
 
-void Resize(ioopm_hash_table_t* ht)
+void resize(ioopm_hash_table_t* ht)
 {
     size_t old_size = ht->capacity;
     size_t new_size = get_new_size(ht->capacity);
@@ -153,7 +153,7 @@ void Resize(ioopm_hash_table_t* ht)
             hash_table_entry_t* old_next = entry->next;
             entry->next = NULL;
             size_t buck_idx = (size_t)(ht->hfunc(entry->key) % (int)new_size);;
-            insertAt(ht, buck_idx, entry);
+            insert_at(ht, buck_idx, entry);
             entry = old_next;
         }
     }
@@ -165,7 +165,7 @@ IOOPM_RESULT ioopm_hash_table_insert(ioopm_hash_table_t* ht, elem_t key, elem_t 
 {
     if ((ht->load_fac * (float)(ht->capacity)) < ht->size)
     {
-        Resize(ht);
+        resize(ht);
     }
 
     if (ht->hfunc(key) % (int)(ht->capacity) < 0)
@@ -192,6 +192,7 @@ IOOPM_RESULT ioopm_hash_table_insert(ioopm_hash_table_t* ht, elem_t key, elem_t 
     {
         FREE(e);
         ht->buckets[ht->hfunc(key) % ht->capacity] = new_hash_table_entry;
+        ht->size--;
         return IOOPM_SOK;
     }
     

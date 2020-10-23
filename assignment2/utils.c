@@ -1,10 +1,11 @@
 #include "utils.h"
 
-typedef union {
+typedef union 
+{
     int   int_value;
     float float_value;
     char* string_value;
-    char command_value;
+    bool bool_value;
 } answer_t;
 
 typedef bool(*check_func)(char*);
@@ -20,7 +21,7 @@ void clear_input_buffer()
     } while (c != '\n' && c != EOF);
 }
 
-int read_string(char* buf, int buf_siz)
+int read_input_string(char* buf, int buf_siz)
 {
     int result = -1;
     int c;
@@ -104,7 +105,7 @@ answer_t ask_question(char* question, check_func check, convert_func convert)
     {
         memset(buf, 0, 255);
         //print(question);
-        read_string(buf, 255);
+        read_input_string(buf, 255);
     } while (!check(buf));
 
     return convert(buf);
@@ -112,10 +113,30 @@ answer_t ask_question(char* question, check_func check, convert_func convert)
 
 bool valid_shelf(char* string)
 {
-    if(strlen(string) != 3)
+    size_t size = strlen(string);
+ 
+    if(size != 3)
+        return false;
+    
+    if(!isalpha(string[0]))
         return false;
         
-    return isalpha(string[0]) && isdigit(string[1]) && isdigit(string[2]);
+    for (int i = 1; i < size; i++) {
+        if(!isdigit(string[i]))
+            return false;
+    }
+    
+    return true;
+}
+
+bool is_bool(char* string)
+{
+    return string[0] == 'y' || string[0] == 'n';
+}
+
+answer_t make_bool(char* string)
+{
+    return (answer_t) {.bool_value = string[0] == 'y'};
 }
 
 double ask_question_float(char* question)
@@ -136,4 +157,9 @@ char* ask_question_string(char* question)
 char* ask_question_shelf(char* question)
 {
     return ask_question(question, valid_shelf, (convert_func)strdup).string_value; // Remember to also free that shit
+}
+
+bool ask_question_bool(char* question)
+{
+    return ask_question(question, is_bool, make_bool).bool_value;
 }

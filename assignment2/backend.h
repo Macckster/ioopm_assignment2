@@ -2,17 +2,29 @@
 
 #include "common.h"
 
+bool merch_compare(elem_t a, elem_t b);
+
+void print_line(char* msg);
+
 //Reads an integer from stdin
-int ReadInt();
+int read_int();
 //Read string from stdin
-char* ReadString();
+char* read_string();
 
 //Read a shelf from stdin
-char* ReadShelf();
+char* read_shelf();
 
-warehouse_t* CreateWarehouse();
-void DestroyWarehouse(warehouse_t* wh);
+//Read a bool from stdin
+bool read_bool();
 
-void PrintMerch(merch_t m);
+int read_int_range(int lo, int hi);
 
-void Sort(merch_t* items, size_t size);
+warehouse_t* create_warehouse();
+void destroy_warehouse(warehouse_t* wh);
+
+void print_merch(merch_t m);
+
+void sort(merch_t* items, size_t size);
+void sort_strings(char* keys[], size_t no_keys);
+
+char* ask_user_for_name(warehouse_t* wh);

@@ -1,7 +1,7 @@
 #pragma once
 
-#define StringValue(x) (elem_t) { .str = x}
-#define MerchValue(x) (elem_t) { .merch = x}
+#define string_value(x) (elem_t) { .str = x}
+#define merch_value(x) (elem_t) { .merch = x}
 
 #include <stdio.h>
 #include <stdlib.h>
